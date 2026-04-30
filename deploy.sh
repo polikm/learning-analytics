@@ -1,6 +1,7 @@
 #!/bin/bash
 # ============================================
 # 学情数据统计分析平台 - 一键部署脚本
+# 兼容 Linux / macOS / Git Bash (Windows)
 # ============================================
 
 set -e
@@ -18,19 +19,76 @@ ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# 检查 Docker 是否安装
+# 检测操作系统
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)     OS="Linux" ;;
+        Darwin*)    OS="macOS" ;;
+        MINGW*|MSYS*|CYGWIN*) OS="Windows" ;;
+        *)          OS="Unknown" ;;
+    esac
+}
+
+# 检查 Docker 是否安装且运行
 check_docker() {
+    detect_os
+
+    # 1. 检查 docker 命令是否存在
     if ! command -v docker &> /dev/null; then
-        error "Docker 未安装，请先安装 Docker"
-        echo "  Ubuntu/Debian: curl -fsSL https://get.docker.com | sh"
-        echo "  macOS: brew install --cask docker"
+        error "Docker 未安装，请先安装 Docker Desktop"
+        echo ""
+        case "$OS" in
+            Windows)
+                echo "  下载地址: https://www.docker.com/products/docker-desktop/"
+                echo "  安装后请重启电脑，并确保 Docker Desktop 已启动"
+                ;;
+            macOS)
+                echo "  安装方式: brew install --cask docker"
+                echo "  或下载: https://www.docker.com/products/docker-desktop/"
+                ;;
+            *)
+                echo "  Ubuntu/Debian: curl -fsSL https://get.docker.com | sh"
+                ;;
+        esac
         exit 1
     fi
-    if ! docker compose version &> /dev/null && ! docker-compose version &> /dev/null; then
+
+    # 2. 检查 Docker daemon 是否运行
+    if ! docker info &> /dev/null; then
+        error "Docker daemon 未运行"
+        echo ""
+        case "$OS" in
+            Windows)
+                echo "  请执行以下操作："
+                echo "  1. 打开 Docker Desktop 应用（从开始菜单或桌面快捷方式）"
+                echo "  2. 等待 Docker Desktop 状态栏图标变为绿色（表示已就绪）"
+                echo "  3. 重新运行本脚本"
+                ;;
+            macOS)
+                echo "  请执行以下操作："
+                echo "  1. 打开 Docker Desktop 应用"
+                echo "  2. 等待状态栏鲸鱼图标变为稳定状态"
+                echo "  3. 重新运行本脚本"
+                ;;
+            *)
+                echo "  请执行: sudo systemctl start docker"
+                ;;
+        esac
+        exit 1
+    fi
+
+    # 3. 检查 Docker Compose 是否可用
+    if docker compose version &> /dev/null; then
+        COMPOSE_CMD="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="docker-compose"
+    else
         error "Docker Compose 未安装"
+        echo "  Docker Desktop 已内置 Compose，请确认 Docker Desktop 版本为最新"
         exit 1
     fi
-    ok "Docker 环境检查通过"
+
+    ok "Docker 环境检查通过 ($OS, $(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1))"
 }
 
 # 检查端口占用
@@ -38,8 +96,26 @@ check_ports() {
     local ports=(80 5432 6379 8080)
     local port_names=("前端(Nginx)" "PostgreSQL" "Redis" "后端(Spring Boot)")
     for i in "${!ports[@]}"; do
-        if lsof -i ":${ports[$i]}" &> /dev/null 2>&1 || ss -tlnp 2>/dev/null | grep -q ":${ports[$i]}"; then
-            warn "端口 ${ports[$i]} (${port_names[$i]}) 已被占用，可能会影响启动"
+        local port="${ports[$i]}"
+        local name="${port_names[$i]}"
+        local in_use=false
+
+        case "$OS" in
+            Windows)
+                # Windows: 使用 netstat 检查端口
+                if netstat -ano 2>/dev/null | grep -q ":${port} .*LISTENING"; then
+                    in_use=true
+                fi
+                ;;
+            *)
+                if lsof -i ":${port}" &> /dev/null 2>&1 || ss -tlnp 2>/dev/null | grep -q ":${port}"; then
+                    in_use=true
+                fi
+                ;;
+        esac
+
+        if [ "$in_use" = true ]; then
+            warn "端口 ${port} (${name}) 已被占用，可能会影响启动"
         fi
     done
 }
@@ -51,7 +127,7 @@ start() {
     check_ports
 
     info "构建并启动所有服务（首次构建需要较长时间）..."
-    docker compose up -d --build
+    $COMPOSE_CMD up -d --build
 
     echo ""
     info "等待服务启动..."
@@ -60,7 +136,7 @@ start() {
     # 检查服务状态
     echo ""
     info "服务状态："
-    docker compose ps
+    $COMPOSE_CMD ps
 
     echo ""
     echo "=========================================="
@@ -83,30 +159,35 @@ start() {
 
 # 停止服务
 stop() {
+    check_docker
     info "停止所有服务..."
-    docker compose down
+    $COMPOSE_CMD down
     ok "服务已停止"
 }
 
 # 重启服务
 restart() {
+    check_docker
     info "重启所有服务..."
-    docker compose restart
+    $COMPOSE_CMD restart
     ok "服务已重启"
 }
 
 # 查看日志
 logs() {
-    docker compose logs -f --tail=100
+    check_docker
+    $COMPOSE_CMD logs -f --tail=100
 }
 
 # 查看状态
 status() {
-    docker compose ps
+    check_docker
+    $COMPOSE_CMD ps
 }
 
 # 导入演示数据
 init_data() {
+    check_docker
     info "导入演示数据..."
     docker exec -i learning-postgres psql -U postgres -d learning_analytics < learning-analytics/doc/sql/init-data.sql
     ok "演示数据导入完成"
@@ -114,10 +195,11 @@ init_data() {
 
 # 清理所有数据（危险操作）
 clean() {
+    check_docker
     warn "此操作将删除所有容器、镜像和数据卷！"
     read -p "确定要继续吗？(y/N): " confirm
     if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-        docker compose down -v --rmi all
+        $COMPOSE_CMD down -v --rmi all
         ok "清理完成"
     else
         info "已取消"
