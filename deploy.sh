@@ -126,12 +126,43 @@ start() {
     check_docker
     check_ports
 
-    info "构建并启动所有服务（首次构建需要较长时间）..."
-    $COMPOSE_CMD up -d --build
+    echo ""
+    info "=========================================="
+    info "  第 1 步：构建镜像（首次约 3-8 分钟）"
+    info "=========================================="
+    echo ""
+    warn "首次构建需要下载基础镜像和依赖，请耐心等待..."
+    warn "如果网络较慢，后端构建可能需要 10+ 分钟"
+    echo ""
+
+    # 先构建镜像（前台输出，让用户看到进度）
+    $COMPOSE_CMD build 2>&1
+    local build_result=$?
+
+    if [ $build_result -ne 0 ]; then
+        error "镜像构建失败！请检查上方错误信息"
+        echo ""
+        echo "常见问题："
+        echo "  1. 网络问题：无法下载 Maven 依赖或 npm 包，请检查网络/代理"
+        echo "  2. 磁盘空间不足：Docker 镜像需要约 3GB 空间"
+        echo "  3. 内存不足：Maven 编译需要至少 2GB 可用内存"
+        exit 1
+    fi
 
     echo ""
-    info "等待服务启动..."
-    sleep 5
+    ok "镜像构建成功！"
+    echo ""
+    info "=========================================="
+    info "  第 2 步：启动服务"
+    info "=========================================="
+    echo ""
+
+    # 后台启动服务
+    $COMPOSE_CMD up -d
+
+    echo ""
+    info "等待服务启动（后端约需 30-60 秒）..."
+    sleep 8
 
     # 检查服务状态
     echo ""
@@ -153,7 +184,10 @@ start() {
     echo "    家  长: parent01 / parent123"
     echo "    学  生: student01 / student123"
     echo ""
-    echo -e "  ${YELLOW}提示:${NC} 后端服务启动需要等待约 30-60 秒"
+    echo -e "  ${YELLOW}提示:${NC}"
+    echo "    - 后端服务启动需要等待约 30-60 秒"
+    echo "    - 查看实时日志: ./deploy.sh logs"
+    echo "    - 查看服务状态: ./deploy.sh status"
     echo ""
 }
 

@@ -12,7 +12,8 @@ COPY learning-model/pom.xml learning-model/
 COPY learning-service/pom.xml learning-service/
 COPY learning-admin/pom.xml learning-admin/
 
-RUN mvn dependency:go-offline -B
+# 只下载运行时依赖（跳过测试依赖），大幅加速
+RUN mvn dependency:resolve -B -DexcludeScope=test
 
 # 复制源代码并构建
 COPY . .
