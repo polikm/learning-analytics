@@ -132,11 +132,83 @@ check_ports() {
     done
 }
 
+# 检查 Docker Hub 连通性
+check_docker_hub() {
+    info "检查 Docker Hub 连通性..."
+    if timeout 10 docker pull hello-world &> /dev/null; then
+        ok "Docker Hub 连接正常"
+        return 0
+    else
+        error "无法连接 Docker Hub（国内网络常见问题）"
+        echo ""
+        echo "请配置 Docker 镜像加速器，步骤如下："
+        echo ""
+        case "$OS" in
+            Windows)
+                echo "  方法一（推荐）：Docker Desktop 图形界面配置"
+                echo "    1. 打开 Docker Desktop"
+                echo "    2. 点击右上角齿轮图标 (Settings)"
+                echo "    3. 左侧选择 Docker Engine"
+                echo "    4. 在 JSON 编辑框中添加以下内容："
+                echo ""
+                echo '       "registry-mirrors": ['
+                echo '         "https://docker.xuanyuan.me",'
+                echo '         "https://docker.1ms.run",'
+                echo '         "https://docker.1panel.live",'
+                echo '         "https://hub.rat.dev",'
+                echo '         "https://docker.m.daocloud.io"'
+                echo '       ]'
+                echo ""
+                echo "    5. 点击 Apply & Restart，等待 Docker 重启"
+                echo "    6. 重新运行 ./deploy.sh start"
+                echo ""
+                echo "  方法二：命令行配置"
+                echo "    1. 打开 PowerShell（管理员）"
+                echo '    2. 运行: %USERPROFILE%\.docker\daemon.json'
+                echo "    3. 添加上面的 registry-mirrors 配置"
+                echo "    4. 重启 Docker Desktop"
+                ;;
+            macOS)
+                echo "  Docker Desktop 图形界面配置："
+                echo "    1. 打开 Docker Desktop"
+                echo "    2. 菜单栏 -> Preferences -> Docker Engine"
+                echo "    3. 添加 registry-mirrors 配置（同上）"
+                echo "    4. Apply & Restart"
+                ;;
+            *)
+                echo "  Linux 命令行配置："
+                echo '    sudo mkdir -p /etc/docker'
+                echo '    sudo tee /etc/docker/daemon.json <<EOF'
+                echo '    {'
+                echo '      "registry-mirrors": ['
+                echo '        "https://docker.xuanyuan.me",'
+                echo '        "https://docker.1ms.run",'
+                echo '        "https://docker.1panel.live",'
+                echo '        "https://hub.rat.dev",'
+                echo '        "https://docker.m.daocloud.io"'
+                echo '      ]'
+                echo '    }'
+                echo '    EOF'
+                echo '    sudo systemctl restart docker'
+                ;;
+        esac
+        echo ""
+        echo "  配置完成后重新运行: ./deploy.sh start"
+        return 1
+    fi
+}
+
 # 启动服务
 start() {
     info "开始部署学情数据统计分析平台..."
     check_docker
     check_ports
+
+    # 检查 Docker Hub 连通性
+    if ! check_docker_hub; then
+        pause_on_exit
+        exit 1
+    fi
 
     echo ""
     info "=========================================="
