@@ -66,5 +66,5 @@ export function getStudentTrend(studentId: number, subjectId?: number) {
 
 /** 获取班级排名 */
 export function getClassRanking(classId: number, examId: number) {
-  return get<ClassRanking[]>(`/scores/class/${classId}/exam/${examId}/ranking`)
+  return get<ClassRanking[]>(`/scores/class/${classId}/ranking`, { examId })
 }

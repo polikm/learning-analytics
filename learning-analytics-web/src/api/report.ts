@@ -76,6 +76,6 @@ export function getStudentReports(studentId: number) {
 }
 
 /** 获取报告模板列表 */
-export function getReportTemplateList(type?: string) {
-  return get<ReportTemplate[]>('/reports/templates', { type })
+export function getReportTemplateList(templateType?: string) {
+  return get<ReportTemplate[]>('/report-templates', { templateType })
 }

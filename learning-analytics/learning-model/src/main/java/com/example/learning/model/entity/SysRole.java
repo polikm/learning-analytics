@@ -22,17 +22,25 @@ public class SysRole {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long tenantId;
+    private String roleName;
 
     private String roleCode;
 
-    private String roleName;
+    /** 数据范围: 1-全部, 2-本学校, 3-本年级, 4-本班级, 5-本人 */
+    private Integer dataScope;
 
-    private String description;
+    private Integer sortOrder;
 
-    @TableField("is_system")
-    private Integer isSystem;
+    /** 状态: 1-启用, 0-禁用 */
+    private Integer status;
+
+    private String remark;
+
+    private Long tenantId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }

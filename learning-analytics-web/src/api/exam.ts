@@ -45,12 +45,9 @@ export interface ExamFormData {
 
 /** 答题数据 */
 export interface AnswerData {
-  examId: number
-  studentId: number
+  recordId: number
   questionId: number
-  answer: string
-  isCorrect?: boolean
-  score?: number
+  studentAnswer: string
 }
 
 /** 获取测评列表 */
@@ -94,8 +91,8 @@ export function submitExam(id: number) {
 }
 
 /** 保存答案 */
-export function saveAnswer(data: AnswerData) {
-  return post('/exams/save-answer', data)
+export function saveAnswer(examId: number, data: AnswerData) {
+  return post(`/exams/${examId}/answers`, data)
 }
 
 /** 自动阅卷 */

@@ -670,3 +670,45 @@ CREATE INDEX idx_sys_audit_log_created_at ON sys_audit_log(created_at);
 CREATE INDEX idx_sys_dict_item_dict_id ON sys_dict_item(dict_id);
 CREATE INDEX idx_sys_message_receiver_id ON sys_message(receiver_id);
 CREATE INDEX idx_sys_message_is_read ON sys_message(is_read);
+
+-- ============================================================
+-- 10. 系统设置 (1张表)
+-- ============================================================
+
+-- 10.1 系统设置表
+CREATE TABLE IF NOT EXISTS sys_setting (
+    id              BIGSERIAL       PRIMARY KEY,
+    setting_key     VARCHAR(100)    NOT NULL UNIQUE,
+    setting_value   TEXT,
+    setting_group   VARCHAR(50)     DEFAULT 'basic',
+    description     VARCHAR(255),
+    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE sys_setting IS '系统设置表';
+COMMENT ON COLUMN sys_setting.setting_key IS '设置键';
+COMMENT ON COLUMN sys_setting.setting_value IS '设置值';
+COMMENT ON COLUMN sys_setting.setting_group IS '设置分组: basic/security/notification';
+
+-- 系统设置索引
+CREATE INDEX idx_sys_setting_group ON sys_setting(setting_group);
+
+-- 初始化默认系统设置数据
+INSERT INTO sys_setting (setting_key, setting_value, setting_group, description) VALUES
+    ('site_name', '学情数据统计分析平台', 'basic', '站点名称'),
+    ('site_logo', '', 'basic', '站点Logo'),
+    ('site_description', '基于大数据的学情分析与可视化平台', 'basic', '站点描述'),
+    ('default_page_size', '10', 'basic', '默认分页大小'),
+    ('data_retention_days', '365', 'basic', '数据保留天数'),
+    ('allow_register', 'false', 'security', '是否允许注册'),
+    ('password_min_length', '8', 'security', '密码最小长度'),
+    ('password_require_uppercase', 'true', 'security', '密码是否要求大写字母'),
+    ('password_require_number', 'true', 'security', '密码是否要求数字'),
+    ('login_max_attempts', '5', 'security', '登录最大尝试次数'),
+    ('session_timeout', '30', 'security', '会话超时时间(分钟)'),
+    ('email_notification_enabled', 'true', 'notification', '是否启用邮件通知'),
+    ('sms_notification_enabled', 'false', 'notification', '是否启用短信通知'),
+    ('report_generate_notify', 'true', 'notification', '报告生成完成通知'),
+    ('system_alert_enabled', 'true', 'notification', '系统告警通知')
+ON CONFLICT (setting_key) DO NOTHING;

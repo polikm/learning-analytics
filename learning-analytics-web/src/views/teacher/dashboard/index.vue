@@ -169,7 +169,7 @@ async function loadDashboard() {
   try {
     const [examRes, warningRes] = await Promise.all([
       getExamList({ page: 1, pageSize: 5 }),
-      getWarnings(),
+      getWarnings(0),
     ])
     recentExams.value = examRes.data?.list || []
     warningStudents.value = warningRes.data || []

@@ -234,7 +234,7 @@ function warningText(type: string) {
 
 async function loadData() {
   try {
-    const res = await getWarnings()
+    const res = await getWarnings(0)
     warningList.value = (res.data || []).slice(0, 8)
   } catch (e) {
     console.error('加载大屏数据失败', e)

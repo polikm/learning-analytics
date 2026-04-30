@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,30 +22,39 @@ public class LearningBehavior {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long tenantId;
-
+    /** 学生用户ID */
     private Long studentId;
 
-    private String sourceSystem;
-
-    private String behaviorType;
-
+    /** 学科ID */
     private Long subjectId;
 
-    private String resourceId;
+    /** 行为类型: login/logout/study/practice/exam/video/interaction */
+    private String behaviorType;
 
-    private String resourceName;
+    /** 行为详情(JSON) */
+    private String behaviorDetail;
 
+    /** 持续时间(秒) */
     private Integer duration;
 
-    private BigDecimal score;
+    /** 来源: web/mobile/api */
+    private String source;
 
-    private String detailJson;
+    /** IP地址 */
+    private String ipAddress;
 
+    /** 用户代理 */
+    private String userAgent;
+
+    /** 行为时间 */
     private LocalDateTime behaviorTime;
 
-    private LocalDateTime syncTime;
+    /** 租户ID */
+    private Long tenantId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }

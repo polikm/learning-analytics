@@ -76,6 +76,36 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/settings/index.vue'),
         meta: { title: '系统设置', icon: 'Setting' },
       },
+      {
+        path: 'audit-logs',
+        name: 'AdminAuditLogs',
+        component: () => import('@/views/admin/audit-log/index.vue'),
+        meta: { title: '审计日志', icon: 'Notebook' },
+      },
+      {
+        path: 'subjects',
+        name: 'AdminSubjects',
+        component: () => import('@/views/admin/subject/index.vue'),
+        meta: { title: '学科管理', icon: 'Reading' },
+      },
+      {
+        path: 'knowledge-points',
+        name: 'AdminKnowledgePoints',
+        component: () => import('@/views/admin/knowledge-point/index.vue'),
+        meta: { title: '知识点管理', icon: 'Share' },
+      },
+      {
+        path: 'report-templates',
+        name: 'AdminReportTemplates',
+        component: () => import('@/views/admin/report-template/index.vue'),
+        meta: { title: '报告模板管理', icon: 'Document' },
+      },
+      {
+        path: 'messages',
+        name: 'AdminMessages',
+        component: () => import('@/views/admin/message/index.vue'),
+        meta: { title: '消息管理', icon: 'Bell' },
+      },
     ],
   },
 ]
@@ -122,6 +152,12 @@ export const teacherRoutes: RouteRecordRaw[] = [
         name: 'TeacherReports',
         component: () => import('@/views/teacher/report/index.vue'),
         meta: { title: '学情报告', icon: 'DataAnalysis' },
+      },
+      {
+        path: 'learning-behavior',
+        name: 'TeacherLearningBehavior',
+        component: () => import('@/views/teacher/learning-behavior/index.vue'),
+        meta: { title: '学习行为分析', icon: 'TrendCharts' },
       },
       {
         path: 'exams/:id/analysis',
@@ -198,6 +234,12 @@ export const studentRoutes: RouteRecordRaw[] = [
         name: 'StudentScores',
         component: () => import('@/views/student/score/index.vue'),
         meta: { title: '成绩查询' },
+      },
+      {
+        path: 'learning-behavior',
+        name: 'StudentLearningBehavior',
+        component: () => import('@/views/student/learning-behavior/index.vue'),
+        meta: { title: '学习行为' },
       },
       {
         path: 'profile',

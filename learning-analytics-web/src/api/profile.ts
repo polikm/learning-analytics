@@ -97,6 +97,6 @@ export function getKnowledgeMastery(studentId: number) {
 }
 
 /** 获取预警列表 */
-export function getWarnings(studentId?: number) {
-  return get<WarningItem[]>('/profile/warnings', { studentId })
+export function getWarnings(studentId: number) {
+  return get<WarningItem[]>(`/profile/student/${studentId}/warnings`)
 }

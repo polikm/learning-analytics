@@ -221,6 +221,7 @@ const markedSet = ref<Set<number>>(new Set())
 const remainSeconds = ref(3600)
 const submitVisible = ref(false)
 const showSaveTip = ref(false)
+const recordId = ref(0)
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null
@@ -310,11 +311,10 @@ async function autoSave() {
         ? JSON.stringify(multipleAnswers[q.id])
         : answers[q.id]
       if (answer) {
-        await saveAnswer({
-          examId,
-          studentId: 1,
+        await saveAnswer(examId, {
+          recordId: recordId.value,
           questionId: q.id,
-          answer: String(answer),
+          studentAnswer: String(answer),
         })
       }
     }
@@ -382,7 +382,10 @@ async function loadExam() {
       },
     ]
 
-    await startExam(examId)
+    const startRes = await startExam(examId)
+    if (startRes.data) {
+      recordId.value = startRes.data.id || startRes.data.recordId || 0
+    }
     startCountdown()
   } catch (e) {
     ElMessage.error('加载测评失败')

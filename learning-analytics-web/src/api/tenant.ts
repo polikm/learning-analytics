@@ -58,3 +58,8 @@ export function updateTenant(id: number, data: TenantFormData) {
 export function deleteTenant(id: number) {
   return del(`/tenants/${id}`)
 }
+
+/** 获取租户详情 */
+export function getTenantDetail(id: number) {
+  return get<TenantItem>(`/tenants/${id}`)
+}

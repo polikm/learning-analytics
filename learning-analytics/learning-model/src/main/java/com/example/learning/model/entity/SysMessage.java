@@ -22,8 +22,6 @@ public class SysMessage {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long tenantId;
-
     private Long senderId;
 
     private Long receiverId;
@@ -32,11 +30,27 @@ public class SysMessage {
 
     private String content;
 
-    private String msgType;
+    @TableField("message_type")
+    private String messageType;
 
     @TableField("is_read")
     private Integer isRead;
 
+    @TableField("read_time")
+    private LocalDateTime readTime;
+
+    @TableField("extra_data")
+    private String extraData;
+
+    private Integer status;
+
+    private String remark;
+
+    private Long tenantId;
+
     @TableField("created_at")
     private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }

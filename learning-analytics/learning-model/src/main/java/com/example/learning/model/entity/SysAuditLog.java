@@ -22,32 +22,51 @@ public class SysAuditLog {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long tenantId;
-
+    /** 操作用户ID */
     private Long userId;
 
-    private String userName;
+    /** 操作用户名 */
+    private String username;
 
+    /** 操作描述 */
     private String operation;
 
-    private String resourceType;
+    /** 请求方法(类名.方法名) */
+    private String method;
 
-    private String resourceId;
-
-    private String requestMethod;
-
+    /** 请求URL */
     private String requestUrl;
 
+    /** HTTP方法(GET/POST/PUT/DELETE) */
+    private String requestMethod;
+
+    /** 请求参数 */
     private String requestParams;
 
-    private Integer responseCode;
+    /** 响应数据 */
+    private String responseData;
 
+    /** IP地址 */
     private String ipAddress;
 
+    /** 用户代理 */
     private String userAgent;
 
-    private Long duration;
+    /** 执行时长(毫秒) */
+    private Integer duration;
+
+    /** 状态: 1-成功, 0-失败 */
+    private Integer status;
+
+    /** 错误信息 */
+    private String errorMsg;
+
+    /** 租户ID */
+    private Long tenantId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }

@@ -42,6 +42,7 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <MessageCenter />
           <el-dropdown trigger="click" @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="32" icon="UserFilled" />
@@ -75,6 +76,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import MessageCenter from '@/components/MessageCenter.vue'
 
 const route = useRoute()
 const appStore = useAppStore()

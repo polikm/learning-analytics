@@ -22,17 +22,21 @@ public class ParentStudent {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long tenantId;
-
     private Long parentId;
 
     private Long studentId;
 
-    private String relationType;
+    private String relation;
 
-    @TableField("is_primary")
-    private Integer isPrimary;
+    private Integer status;
+
+    private String remark;
+
+    private Long tenantId;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
+
+    @TableField("updated_at")
+    private LocalDateTime updatedAt;
 }
