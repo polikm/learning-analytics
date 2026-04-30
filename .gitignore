@@ -1,0 +1,54 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.swp
+*.swo
+*~
+
+# Node.js
+node_modules/
+dist/
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Docker
+postgres_data/
+redis_data/
+
+# Temp
+*.tmp
+*.bak
+*.swp
+*.log
+
+# Trae
+.trae/

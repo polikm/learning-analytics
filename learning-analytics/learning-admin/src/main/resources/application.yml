@@ -1,0 +1,114 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: learning-analytics
+
+  # 数据源配置 - PostgreSQL
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/learning_analytics?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: postgres
+    password: postgres123
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: LearningHikariCP
+
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis123
+      database: 0
+      timeout: 10000ms
+      lettuce:
+        pool:
+          min-idle: 5
+          max-idle: 10
+          max-active: 20
+          max-wait: -1ms
+
+  # Jackson 配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.example.learning.model.entity
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      tenant-column: tenant_id
+    banner: false
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# Sa-Token 配置
+sa-token:
+  token-name: Authorization
+  timeout: 86400
+  active-timeout: 1800
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: false
+  is-print: false
+
+# SpringDoc OpenAPI (Swagger) 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.example.learning
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.example.learning: debug
+    com.baomidou.mybatisplus: debug

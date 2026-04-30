@@ -1,0 +1,179 @@
+// ==================== CSS 变量 ====================
+:root {
+  --color-primary: #409EFF;
+  --color-primary-light: #66B1FF;
+  --color-primary-dark: #3A8EE6;
+  --color-success: #67C23A;
+  --color-warning: #E6A23C;
+  --color-danger: #F56C6C;
+  --color-info: #909399;
+
+  --color-text-primary: #303133;
+  --color-text-regular: #606266;
+  --color-text-secondary: #909399;
+  --color-text-placeholder: #C0C4CC;
+
+  --color-bg-page: #F2F3F5;
+  --color-bg-white: #FFFFFF;
+
+  --border-color: #DCDFE6;
+  --border-color-light: #E4E7ED;
+
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 56px;
+  --tab-bar-height: 50px;
+
+  --border-radius: 4px;
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+
+  --transition-duration: 0.3s;
+}
+
+// ==================== 基础样式重置 ====================
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-primary-light);
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+// ==================== 滚动条 ====================
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #C0C4CC;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #909399;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+// ==================== 通用工具类 ====================
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.ml-8 { margin-left: 8px; }
+.mr-8 { margin-right: 8px; }
+.p-16 { padding: 16px; }
+.p-24 { padding: 24px; }
+
+.card-shadow {
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--border-radius);
+}
+
+// ==================== NProgress 自定义 ====================
+#nprogress .bar {
+  background: var(--color-primary) !important;
+  height: 3px !important;
+}
+
+// ==================== 页面过渡动画 ====================
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--transition-duration);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
