@@ -4,7 +4,7 @@
 # 兼容 Linux / macOS / Git Bash (Windows)
 # ============================================
 
-set -e
+# 不使用 set -e，手动处理错误，避免 Windows 窗口意外关闭
 
 # 颜色定义
 RED='\033[0;31m'
@@ -18,6 +18,16 @@ info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
 ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+# Windows 下防止窗口自动关闭
+pause_on_exit() {
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*)
+            echo ""
+            read -p "按 Enter 键退出..."
+            ;;
+    esac
+}
 
 # 检测操作系统
 detect_os() {
@@ -50,6 +60,7 @@ check_docker() {
                 echo "  Ubuntu/Debian: curl -fsSL https://get.docker.com | sh"
                 ;;
         esac
+        pause_on_exit
         exit 1
     fi
 
@@ -74,6 +85,7 @@ check_docker() {
                 echo "  请执行: sudo systemctl start docker"
                 ;;
         esac
+        pause_on_exit
         exit 1
     fi
 
@@ -85,6 +97,7 @@ check_docker() {
     else
         error "Docker Compose 未安装"
         echo "  Docker Desktop 已内置 Compose，请确认 Docker Desktop 版本为最新"
+        pause_on_exit
         exit 1
     fi
 
@@ -102,7 +115,6 @@ check_ports() {
 
         case "$OS" in
             Windows)
-                # Windows: 使用 netstat 检查端口
                 if netstat -ano 2>/dev/null | grep -q ":${port} .*LISTENING"; then
                     in_use=true
                 fi
@@ -128,24 +140,47 @@ start() {
 
     echo ""
     info "=========================================="
-    info "  第 1 步：构建镜像（首次约 3-8 分钟）"
+    info "  第 1 步：拉取基础镜像"
     info "=========================================="
     echo ""
-    warn "首次构建需要下载基础镜像和依赖，请耐心等待..."
+
+    # 先拉取基础镜像（postgres、redis 是现成镜像，很快）
+    $COMPOSE_CMD pull postgres redis 2>&1
+    if [ $? -ne 0 ]; then
+        warn "基础镜像拉取失败（可能网络问题），尝试继续构建..."
+    else
+        ok "基础镜像拉取完成"
+    fi
+
+    echo ""
+    info "=========================================="
+    info "  第 2 步：构建应用镜像（首次约 3-8 分钟）"
+    info "=========================================="
+    echo ""
+    warn "首次构建需要下载 Maven 依赖和 npm 包，请耐心等待..."
     warn "如果网络较慢，后端构建可能需要 10+ 分钟"
     echo ""
 
-    # 先构建镜像（前台输出，让用户看到进度）
-    $COMPOSE_CMD build 2>&1
+    # 构建应用镜像（前台输出，让用户看到进度）
+    $COMPOSE_CMD build backend frontend 2>&1
     local build_result=$?
 
     if [ $build_result -ne 0 ]; then
-        error "镜像构建失败！请检查上方错误信息"
         echo ""
-        echo "常见问题："
-        echo "  1. 网络问题：无法下载 Maven 依赖或 npm 包，请检查网络/代理"
+        error "镜像构建失败！"
+        echo ""
+        echo "常见原因："
+        echo "  1. 网络问题：无法下载 Maven 依赖或 npm 包"
+        echo "     -> 请检查网络连接，或配置 Docker 代理"
         echo "  2. 磁盘空间不足：Docker 镜像需要约 3GB 空间"
+        echo "     -> 运行 docker system df 查看空间"
         echo "  3. 内存不足：Maven 编译需要至少 2GB 可用内存"
+        echo "     -> 在 Docker Desktop Settings > Resources 中增加内存"
+        echo ""
+        echo "排查命令："
+        echo "  docker system df          # 查看磁盘使用"
+        echo "  docker compose build backend 2>&1  # 单独构建后端查看详细错误"
+        pause_on_exit
         exit 1
     fi
 
@@ -153,12 +188,18 @@ start() {
     ok "镜像构建成功！"
     echo ""
     info "=========================================="
-    info "  第 2 步：启动服务"
+    info "  第 3 步：启动所有服务"
     info "=========================================="
     echo ""
 
-    # 后台启动服务
+    # 后台启动所有服务
     $COMPOSE_CMD up -d
+
+    if [ $? -ne 0 ]; then
+        error "服务启动失败！请运行 ./deploy.sh logs 查看错误日志"
+        pause_on_exit
+        exit 1
+    fi
 
     echo ""
     info "等待服务启动（后端约需 30-60 秒）..."
@@ -189,6 +230,8 @@ start() {
     echo "    - 查看实时日志: ./deploy.sh logs"
     echo "    - 查看服务状态: ./deploy.sh status"
     echo ""
+
+    pause_on_exit
 }
 
 # 停止服务
@@ -268,5 +311,5 @@ case "${1:-start}" in
     init-data) init_data ;;
     clean)     clean ;;
     help|-h|--help) usage ;;
-    *)         error "未知命令: $1"; usage; exit 1 ;;
+    *)         error "未知命令: $1"; usage; pause_on_exit; exit 1 ;;
 esac
