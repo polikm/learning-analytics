@@ -1,0 +1,15 @@
+# ============================================
+# Docker 环境专用配置 - 覆盖 application.yml
+# ============================================
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/learning_analytics?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: postgres
+    password: postgres123
+
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: redis123

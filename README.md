@@ -69,10 +69,13 @@
 │   ├── learning-model/                # 数据模型 (Entity、Mapper、DTO、VO)
 │   ├── learning-service/              # 业务逻辑 (Service 层)
 │   ├── learning-admin/                # 管理后台 (Controller、启动类、配置)
+│   │   └── src/main/resources/
+│   │       ├── application.yml        # 默认配置 (本地开发)
+│   │       └── application-docker.yml # Docker 环境配置
 │   ├── doc/sql/                       # 数据库脚本
 │   │   ├── init.sql                   # DDL 建表语句 (30 张表)
 │   │   └── init-data.sql              # 演示数据
-│   ├── docker-compose.yml             # PostgreSQL + Redis 容器编排
+│   ├── Dockerfile                     # 后端多阶段构建
 │   └── pom.xml                        # Maven 父 POM
 │
 ├── learning-analytics-web/            # 前端 (Vue 3)
@@ -87,9 +90,13 @@
 │   │   ├── stores/                    # Pinia 状态管理
 │   │   ├── router/                    # 路由配置
 │   │   └── layouts/                   # 布局组件
+│   ├── Dockerfile                     # 前端多阶段构建
+│   ├── nginx.conf                     # Nginx 配置 (反向代理)
 │   ├── vite.config.ts                 # Vite 配置
 │   └── package.json
 │
+├── docker-compose.yml                 # 一键编排 (全部 4 个服务)
+├── deploy.sh                          # 一键部署脚本
 └── doc/                               # 设计文档
     ├── 学情数据统计分析平台_需求规格说明书.docx
     ├── 学情数据统计分析平台_系统架构设计文档.docx
@@ -98,76 +105,37 @@
     └── 学情数据统计分析平台_前端页面原型设计文档.docx
 ```
 
-## 环境要求
+## Docker 一键部署（推荐）
 
-| 依赖 | 版本要求 |
-|------|----------|
-| JDK | 17+ |
-| Maven | 3.8+ |
-| Node.js | 18+ |
-| Docker & Docker Compose | 最新稳定版 |
-| PostgreSQL | 16 (通过 Docker 部署) |
-| Redis | 7 (通过 Docker 部署) |
+只需安装 [Docker](https://docs.docker.com/get-docker/) 和 [Docker Compose](https://docs.docker.com/compose/install/)，无需安装 JDK、Maven、Node.js 等任何依赖。
 
-## 快速部署
+### 环境要求
 
-### 1. 克隆项目
+| 依赖 | 要求 |
+|------|------|
+| Docker | 20.10+ |
+| Docker Compose | V2+ |
+
+### 一键启动
 
 ```bash
+# 1. 克隆项目
 git clone https://github.com/polikm/learning-analytics.git
 cd learning-analytics
+
+# 2. 一键构建并启动（首次构建约 5-10 分钟）
+./deploy.sh start
+
+# 3. 导入演示数据（可选）
+./deploy.sh init-data
 ```
 
-### 2. 启动基础设施 (PostgreSQL + Redis)
+启动成功后：
+- **前端访问**：http://localhost
+- **后端 API**：http://localhost:8080
+- **API 文档**：http://localhost/swagger-ui/
 
-```bash
-cd learning-analytics
-docker-compose up -d
-```
-
-这将启动：
-- **PostgreSQL 16**：端口 `5432`，用户名 `postgres`，密码 `postgres123`，数据库 `learning_analytics`
-- **Redis 7**：端口 `6379`，密码 `redis123`
-
-数据库表结构会在 PostgreSQL 首次启动时自动创建（通过 `init.sql`）。
-
-### 3. 导入演示数据（可选）
-
-```bash
-docker exec -i learning-postgres psql -U postgres -d learning_analytics < doc/sql/init-data.sql
-```
-
-演示数据包含：
-- 1 个租户、1 所学校、3 个年级、6 个班级
-- 10 个用户（管理员、教师、家长、学生）
-- 4 个学科、11 个知识点、10 道试题、1 套试卷
-- 1 场考试、5 条考试记录、50 条答题详情
-- 3 张证书、2 个字典类型
-
-### 4. 启动后端
-
-```bash
-cd learning-analytics
-mvn clean install -DskipTests
-cd learning-admin
-mvn spring-boot:run
-```
-
-后端启动后：
-- 服务地址：`http://localhost:8080`
-- API 文档 (Swagger)：`http://localhost:8080/swagger-ui.html`
-
-### 5. 启动前端
-
-```bash
-cd learning-analytics-web
-npm install
-npm run dev
-```
-
-前端启动后访问：`http://localhost:3000`
-
-### 6. 默认账号
+### 默认账号
 
 | 角色 | 用户名 | 密码 |
 |------|--------|------|
@@ -176,9 +144,87 @@ npm run dev
 | 家长 | parent01 | parent123 |
 | 学生 | student01 | student123 |
 
+### 部署管理命令
+
+```bash
+./deploy.sh start       # 一键构建并启动
+./deploy.sh stop        # 停止所有服务
+./deploy.sh restart     # 重启所有服务
+./deploy.sh logs        # 查看实时日志
+./deploy.sh status      # 查看服务状态
+./deploy.sh init-data   # 导入演示数据
+./deploy.sh clean       # 清理所有容器、镜像和数据卷
+```
+
+### Docker 服务架构
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │           Docker Compose 网络             │
+                    │                                         │
+  :80               │  ┌──────────┐       ┌──────────────┐   │
+ ─────────────────▶│  │  Nginx   │──API──▶│ Spring Boot  │   │
+  前端 (Vue)        │  │ (前端)   │       │   (后端)      │   │
+                    │  └──────────┘       └──────┬───────┘   │
+                    │                            │           │
+  :8080             │                     ┌──────┴───────┐   │
+ ─────────────────▶│                     │  PostgreSQL  │   │
+  后端 API          │                     │   Redis      │   │
+                    │                     └──────────────┘   │
+                    └─────────────────────────────────────────┘
+```
+
+## 本地开发部署
+
+如果你需要本地开发调试，可以按以下步骤操作：
+
+### 环境要求
+
+| 依赖 | 版本要求 |
+|------|----------|
+| JDK | 17+ |
+| Maven | 3.8+ |
+| Node.js | 18+ |
+| Docker & Docker Compose | 最新稳定版 |
+
+### 1. 启动基础设施
+
+```bash
+cd learning-analytics
+docker-compose up -d postgres redis
+```
+
+### 2. 启动后端
+
+```bash
+cd learning-analytics
+mvn clean install -DskipTests
+cd learning-admin
+mvn spring-boot:run
+```
+
+### 3. 启动前端
+
+```bash
+cd learning-analytics-web
+npm install
+npm run dev
+```
+
+前端开发服务器：http://localhost:3000（自动代理 API 到 8080）
+
 ## 配置说明
 
-后端配置文件位于 `learning-analytics/learning-admin/src/main/resources/application.yml`，主要配置项：
+### 后端配置
+
+配置文件位于 `learning-analytics/learning-admin/src/main/resources/`：
+
+| 文件 | 用途 |
+|------|------|
+| `application.yml` | 默认配置（本地开发，连接 localhost） |
+| `application-docker.yml` | Docker 环境（连接 Docker 服务名） |
+
+主要配置项：
 
 ```yaml
 # 数据库连接
@@ -191,72 +237,9 @@ spring.data.redis.host: localhost
 spring.data.redis.port: 6379
 spring.data.redis.password: redis123
 
-# 服务端口
-server.port: 8080
-
-# Token 有效期 (秒)
+# Token 有效期
 sa-token.timeout: 86400        # 24 小时
 sa-token.active-timeout: 1800  # 30 分钟无操作过期
-```
-
-前端开发代理配置位于 `learning-analytics-web/vite.config.ts`，默认将 `/api` 请求代理到 `http://localhost:8080`。
-
-## 构建部署
-
-### 后端打包
-
-```bash
-cd learning-analytics
-mvn clean package -DskipTests
-# 生成的 JAR 位于 learning-admin/target/learning-admin-1.0.0-SNAPSHOT.jar
-java -jar learning-admin/target/learning-admin-1.0.0-SNAPSHOT.jar
-```
-
-### 前端打包
-
-```bash
-cd learning-analytics-web
-npm run build
-# 生成的静态文件位于 dist/ 目录，可部署到 Nginx 等 Web 服务器
-```
-
-### Nginx 配置示例
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    root /path/to/learning-analytics-web/dist;
-    index index.html;
-
-    # 前端路由 history 模式
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # API 反向代理
-    location /api/ {
-        proxy_pass http://localhost:8080/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-
-## 系统架构
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Vue 3 前端  │────▶│  Spring Boot  │────▶│  PostgreSQL  │
-│  (Element+)  │ API │   后端服务    │ SQL │   数据库     │
-└──────────────┘     └──────┬───────┘     └──────────────┘
-                            │
-                     ┌──────┴───────┐
-                     │    Redis     │
-                     │   缓存/会话   │
-                     └──────────────┘
 ```
 
 ## License
