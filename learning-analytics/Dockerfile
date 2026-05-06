@@ -24,6 +24,9 @@ RUN mvn clean package -DskipTests -B
 # ============================================
 FROM eclipse-temurin:17-jre
 
+# 安装 curl 用于健康检查
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 LABEL maintainer="polikm"
 LABEL description="学情数据统计分析平台 - 后端服务"
 

@@ -6,6 +6,9 @@
 
 # 不使用 set -e，手动处理错误，避免 Windows 窗口意外关闭
 
+# 获取脚本所在目录（支持从任意路径执行）
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -338,7 +341,7 @@ status() {
 init_data() {
     check_docker
     info "导入演示数据..."
-    docker exec -i learning-postgres psql -U postgres -d learning_analytics < learning-analytics/doc/sql/init-data.sql
+    docker exec -i learning-postgres psql -U postgres -d learning_analytics < "$SCRIPT_DIR/learning-analytics/doc/sql/init-data.sql"
     ok "演示数据导入完成"
 }
 

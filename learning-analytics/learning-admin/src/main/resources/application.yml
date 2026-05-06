@@ -14,7 +14,7 @@ spring:
   # 数据源配置 - PostgreSQL
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/learning_analytics?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:postgresql://localhost:5432/learning_analytics
     username: postgres
     password: postgres123
     hikari:
